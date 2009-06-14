@@ -1,0 +1,26 @@
+#!/bin/bash
+ARCH=$1
+OTHERFLAGS="-Wall -arch $1 -O0"
+echo "Compiling profiler"
+gcc $OTHERFLAGS "-DOTHERFLAGS=\"$OTHERFLAGS\"" profile.c -o profile
+./profile
+echo "Compiling executer"
+gcc $OTHERFLAGS execute.c -o execute
+echo "Compiling reducer"
+gcc $OTHERFLAGS reduce.c -o reduce
+if ./reduce ; then
+	OSNAME=`uname -s`
+	OSVER=`uname -r`
+	TRIPLE="$OSNAME-$OSVER-$ARCH"
+	cp inject.profile "$TRIPLE.profile"
+else
+	echo "Failed to create profile, see asm dump"
+	./profile --asm
+fi
+echo "Cleaning up"
+rm break.hex
+rm break.o
+rm profile
+rm reduce
+rm execute
+rm inject.profile
